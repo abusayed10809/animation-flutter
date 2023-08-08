@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tesla_animated_app/animation_screens.dart';
 import 'package:tesla_animated_app/screens/home_screen.dart';
+import 'package:tesla_animated_app/van_animation/rotating_animation.dart';
+import 'package:tesla_animated_app/van_animation/box_rotation_animation.dart';
+import 'package:tesla_animated_app/van_animation/rotate_flip_animation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +23,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: HomeScreen(),
+      // home: HomeScreen(),
+      home: AnimationScreens(),
     );
   }
 }
