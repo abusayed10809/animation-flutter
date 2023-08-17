@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tesla_animated_app/screens/home_screen.dart';
+import 'package:tesla_animated_app/van_animation/animated_prompt_screen.dart';
 import 'package:tesla_animated_app/van_animation/box_rotation_animation.dart';
 import 'package:tesla_animated_app/van_animation/color_changing_animation.dart';
 import 'package:tesla_animated_app/van_animation/custom_face_drawing.dart';
@@ -30,6 +31,8 @@ class AnimationScreens extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
+            ///
+            /// floating particles in the background
             FloatingParticleWidget(),
 
             ///
@@ -50,7 +53,6 @@ class AnimationScreens extends StatelessWidget {
                         Navigator.of(context).push(MaterialPageRoute(builder: (_) => HomeScreen()));
                       },
                     ),
-
                     SizedBox(
                       height: 50,
                     ),
@@ -150,7 +152,17 @@ class AnimationScreens extends StatelessWidget {
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => AnimatedDrawer(),
                         ));
-                        // Navigator.of(context).push(MaterialPageRoute(builder: (_) => AnimatedDrawer()));
+                      },
+                    ),
+                    SizedBox(
+                      height: 50,
+                    ),
+                    CommonButton(
+                      title: 'Animated Prompt',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => AnimatedPromptScreen(),
+                        ));
                       },
                     ),
                     SizedBox(
@@ -216,38 +228,40 @@ class FloatingParticleWidget extends StatefulWidget {
 class _FloatingParticleWidgetState extends State<FloatingParticleWidget> {
   late Timer timer;
   late List<Particle> floatingParticles = List<Particle>.generate(400, (index) => Particle());
+
   @override
   void initState() {
     super.initState();
 
     timer = Timer.periodic(Duration(milliseconds: 1000 ~/ 60), (timer) async {
       final List<Particle> newFloatingParticles = calculateParticlePosition(floatingParticles);
-      // final List<Particle> newFloatingParticles = await compute(calculateParticlePosition, floatingParticles);
       setState(() {
         floatingParticles = newFloatingParticles;
-        // floatingParticles.forEach((singleParticle) {
-        //   if(singleParticle.position.dx > 380 || singleParticle.position.dx < 0){
-        //     singleParticle.dx = singleParticle.dx * (-1);
-        //   }
-        //   if(singleParticle.position.dy > 700 || singleParticle.position.dy < 0){
-        //     singleParticle.dy = singleParticle.dy * (-1);
-        //   }
-        //   singleParticle.position += Offset(singleParticle.dx, singleParticle.dy);
-        // });
       });
     });
   }
 
+  ///
+  /// function for calculating the position of all the particles
   static List<Particle> calculateParticlePosition(List<Particle> particleList) {
     particleList.forEach((singleParticle) {
+      ///
+      /// when x axis position goes out of screen bound, change direction of particle which is dx
       if (singleParticle.position.dx > 380 || singleParticle.position.dx < 0) {
         singleParticle.dx = singleParticle.dx * (-1);
       }
+
+      ///
+      /// when y axis position goes out of screen bound, change direction of particle which is dy
       if (singleParticle.position.dy > 700 || singleParticle.position.dy < 0) {
         singleParticle.dy = singleParticle.dy * (-1);
       }
+
+      ///
+      /// update the position value of the particle
       singleParticle.position += Offset(singleParticle.dx, singleParticle.dy);
     });
+
     return particleList;
   }
 
@@ -275,6 +289,8 @@ class FloatingParticleAnimation extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    ///
+    /// drawing the center red circle
     final c = Offset(size.width / 2, size.height / 2);
     final radius = 100.0;
     final paint = Paint()
@@ -286,11 +302,12 @@ class FloatingParticleAnimation extends CustomPainter {
     /// drawing the particles
     this.floatingParticle.forEach((singleParticle) {
       canvas.drawCircle(
-          singleParticle.position,
-          singleParticle.radius,
-          Paint()
-            ..style = PaintingStyle.fill
-            ..color = Colors.white);
+        singleParticle.position,
+        singleParticle.radius,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = Colors.white,
+      );
     });
   }
 
@@ -312,12 +329,18 @@ class Particle {
   late double dx;
   late double dy;
 
+  ///
+  /// constructor
+  /// radius ->>> in range of 3 to 10
+  /// position is the initial spawn position, x range ->>> 0 to 400, y range ->>> 0 to 700
   Particle() {
     this.radius = Utils.Range(3, 10);
     this.color = Colors.black26;
     this.position = Offset(Utils.Range(0, 400), Utils.Range(0, 700));
-    // this.dx = Utils.Range(-0.1, 0.1);
-    // this.dy = Utils.Range(-0.1, 0.1);
+
+    ///
+    /// dx and dy indicates the direction of flow of the particle along the x and y axis
+    /// also determines the movement speed of each particle randomly tweaking dx and dy value
     this.dx = Utils.Range(-1, 1);
     this.dy = Utils.Range(-1, 1);
   }
@@ -332,6 +355,8 @@ final range = Random();
 
 class Utils {
   static double Range(double min, double max) {
+    ///
+    /// range.nextdouble Value is >= 0.0 and < 1.0.
     return range.nextDouble() * (max - min) + min;
   }
 }
