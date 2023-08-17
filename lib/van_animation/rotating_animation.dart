@@ -44,9 +44,13 @@ class _RotatingAnimationState extends State<RotatingAnimation>
         title: const Text('Rotating Animation'),
       ),
       body: Center(
+        ///
+        /// using animated builder to hold the animated widget
         child: AnimatedBuilder(
           animation: animationController,
           builder: (context, child) {
+            ///
+            /// transform widget to transform the rotation
             return Transform(
               alignment: Alignment.center,
               transform: Matrix4.identity()..rotateZ(animation.value),

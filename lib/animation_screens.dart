@@ -215,7 +215,7 @@ class _CommonButtonState extends State<CommonButton> {
 
 /*
 * ------------------------------------------------
-* floating particle widget
+* floating particle background widget
 * ------------------------------------------------
 * */
 class FloatingParticleWidget extends StatefulWidget {

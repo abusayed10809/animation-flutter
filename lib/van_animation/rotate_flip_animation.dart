@@ -2,34 +2,29 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-class RotateFlipAnimation extends StatefulWidget {
-  const RotateFlipAnimation({Key? key}) : super(key: key);
-
-  @override
-  State<RotateFlipAnimation> createState() => _RotateFlipAnimationState();
-}
-
 enum CircleSide { left, right }
 
-extension on VoidCallback {
-  ///
-  /// name of the extension is delayed
-  /// takes in a duration
-  /// returns a function
-  /// the function which is called is """this"""
-  Future<void> delayed(Duration duration) => Future.delayed(duration, this);
-}
+/*
+*  --------------------------------------------------
+*  path -> custom clipper -> clip path
+*/
+class HalfCircleClipper extends CustomClipper<Path> {
+  final CircleSide side;
 
-///
-/// extension to path
-extension ToPath on CircleSide {
-  Path toPath(Size size) {
+  const HalfCircleClipper({
+    required this.side,
+  });
+
+  @override
+  Path getClip(Size size) {
     final Path path = Path();
 
     late Offset offset;
     late bool clockWise;
 
-    switch (this) {
+    ///
+    /// selecting points for the path of the circle sides
+    switch (side) {
       case CircleSide.left:
         path.moveTo(size.width, 0);
         offset = Offset(size.width, size.height);
@@ -41,6 +36,8 @@ extension ToPath on CircleSide {
         break;
     }
 
+    ///
+    /// drawing the arc for a half circle
     path.arcToPoint(
       offset,
       radius: Radius.elliptical(size.width / 2, size.height / 2),
@@ -51,26 +48,23 @@ extension ToPath on CircleSide {
 
     return path;
   }
-}
-
-///
-/// path -> custom clipper -> clip path
-class HalfCircleClipper extends CustomClipper<Path> {
-  final CircleSide side;
-
-  const HalfCircleClipper({
-    required this.side,
-  });
-
-  @override
-  Path getClip(Size size) => side.toPath(size);
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
 }
 
-class _RotateFlipAnimationState extends State<RotateFlipAnimation>
-    with TickerProviderStateMixin {
+/*
+* --------------------------------------------------
+* rotate flip animation widget
+* */
+class RotateFlipAnimation extends StatefulWidget {
+  const RotateFlipAnimation({Key? key}) : super(key: key);
+
+  @override
+  State<RotateFlipAnimation> createState() => _RotateFlipAnimationState();
+}
+
+class _RotateFlipAnimationState extends State<RotateFlipAnimation> with TickerProviderStateMixin {
   late AnimationController counterClockWiseRotationController;
   late Animation<double> counterClockWiseRotationAnimation;
 
@@ -117,6 +111,9 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
     /// establishing status listeners
     counterClockWiseRotationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        ///
+        /// set the initial flip animation value to the current flip animation position value
+        /// set the end value by adding a 180 degree flip to the current value
         flipAnimation = Tween<double>(
           begin: flipAnimation.value,
           end: flipAnimation.value + pi,
@@ -125,6 +122,8 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
           curve: Curves.bounceOut,
         ));
 
+        ///
+        /// reset the controller and set it forward with the new values
         flipAnimationController
           ..reset()
           ..forward();
@@ -135,6 +134,9 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
     /// continue rotation animation after flip animation
     flipAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        ///
+        /// set the rotation controller initial value to current rotation value
+        /// end value is initial value + 90 degrees
         counterClockWiseRotationAnimation = Tween<double>(
           begin: counterClockWiseRotationAnimation.value,
           end: counterClockWiseRotationAnimation.value + (-pi / 2),
@@ -143,15 +145,22 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
           curve: Curves.bounceOut,
         ));
 
+        ///
+        /// reset the animation controller and animate again
         counterClockWiseRotationController
           ..reset()
           ..forward();
       }
     });
 
-    counterClockWiseRotationController
-      ..reset()
-      ..forward.delayed(Duration(seconds: 1));
+    Future.delayed(
+      Duration(seconds: 1),
+      () {
+        counterClockWiseRotationController
+          ..reset()
+          ..forward();
+      },
+    );
   }
 
   @override
@@ -168,16 +177,28 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
         title: const Text('Rotate Flip Animation'),
       ),
       body: Center(
+        ///
+        /// animated builder for animations
         child: AnimatedBuilder(
           animation: counterClockWiseRotationController,
           builder: (context, child) {
+            ///
+            /// rotation animation transform
             return Transform(
               alignment: Alignment.center,
               transform: Matrix4.identity()
-                ..rotateZ(counterClockWiseRotationAnimation.value),
+                ..rotateZ(
+                  counterClockWiseRotationAnimation.value,
+                ),
+
+              ///
+              /// row of items
+              /// rotation will take place for the entire row
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  ///
+                  /// flip animation for left half circle
                   AnimatedBuilder(
                     animation: flipAnimationController,
                     builder: (context, child) {
@@ -188,8 +209,7 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
                             flipAnimation.value,
                           ),
                         child: ClipPath(
-                          clipper:
-                              const HalfCircleClipper(side: CircleSide.left),
+                          clipper: const HalfCircleClipper(side: CircleSide.left),
                           child: Container(
                             color: Colors.blue,
                             width: 180,
@@ -199,6 +219,9 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
                       );
                     },
                   ),
+
+                  ///
+                  /// flip animation for right half circle
                   AnimatedBuilder(
                     animation: flipAnimationController,
                     builder: (context, child) {
@@ -209,8 +232,7 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
                             flipAnimation.value,
                           ),
                         child: ClipPath(
-                          clipper:
-                              const HalfCircleClipper(side: CircleSide.right),
+                          clipper: const HalfCircleClipper(side: CircleSide.right),
                           child: Container(
                             color: Colors.yellow,
                             width: 180,
@@ -227,5 +249,60 @@ class _RotateFlipAnimationState extends State<RotateFlipAnimation>
         ),
       ),
     );
+  }
+}
+
+/*
+* ----------------------------------------
+* extensions on voidcallbacks
+* */
+extension on VoidCallback {
+  ///
+  /// name of the extension is delayed
+  /// takes in a duration
+  /// returns a function
+  /// the function which is called is """this"""
+  Future<void> delayed(Duration duration) => Future.delayed(duration, this);
+}
+
+/*
+* --------------------------------------------------
+* extension on circle side which is an enum
+* circle side can be either ->>> left or right as declared in the enum
+*/
+extension on CircleSide {
+  ///
+  /// toPath is the extension
+  Path toPath(Size size) {
+    final Path path = Path();
+
+    late Offset offset;
+    late bool clockWise;
+
+    ///
+    /// selecting points for the path of the circle sides
+    switch (this) {
+      case CircleSide.left:
+        path.moveTo(size.width, 0);
+        offset = Offset(size.width, size.height);
+        clockWise = false;
+        break;
+      case CircleSide.right:
+        offset = Offset(0, size.height);
+        clockWise = true;
+        break;
+    }
+
+    ///
+    /// drawing the arc for a half circle
+    path.arcToPoint(
+      offset,
+      radius: Radius.elliptical(size.width / 2, size.height / 2),
+      clockwise: clockWise,
+    );
+
+    path.close();
+
+    return path;
   }
 }
